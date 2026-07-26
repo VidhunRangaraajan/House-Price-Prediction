@@ -1,10 +1,11 @@
-# Requirements - pandas, scikit-learn, joblib.
+# Requirements - pandas, scikit-learn, joblib, pickle.
 
 # Importing required libraries.
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from joblib import dump
+import pickle
 
 # Reading the dataset from the csv file.
 df = pd.read_csv('data/house_price.csv')
@@ -31,8 +32,6 @@ x_test = scaler.transform(x_test)
 
 # Saving the preprocessed data to csv files for future use.
 df.to_csv('data/cleaned_house_price.csv', index=False)  # Saving the cleaned data to a csv file.
-x_train = pd.DataFrame(x_train, columns=x.columns)
-x_test = pd.DataFrame(x_test, columns=x.columns)
-y_train = pd.DataFrame(y_train, columns=['price'])
-y_test = pd.DataFrame(y_test, columns=['price'])
+with open("data/train_test_split.pkl", "wb") as f:
+    pickle.dump((x_train, x_test, y_train, y_test), f)
 dump(scaler, "data/scaler.joblib")  # Saving the scaler object for future use in model deployment.
