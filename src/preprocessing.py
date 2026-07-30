@@ -2,7 +2,7 @@
 
 # Importing required libraries.
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 from joblib import dump
 import pickle
@@ -19,6 +19,15 @@ df = df.drop(columns='country')
 # Dropping unnecessary columns that are not useful for the model.
 columns_to_drop = ['date', 'yr_renovated', 'street', 'city', 'statezip']
 df = df.drop(columns=columns_to_drop)
+
+# Creating a list of catogorical columns.
+categorical_columns = ['waterfront', 'view', 'condition']
+
+#Encoding the categorical columns using LabelEncoder and saving the encoders.
+for i in categorical_columns:
+    encoder = LabelEncoder()
+    df[i] = encoder.fit_transform(df[i])
+    dump(encoder, f"data/{i}_encoder.joblib")
 
 # Splitting the data into Test and Train datasets.
 x = df.drop('price', axis=1)
