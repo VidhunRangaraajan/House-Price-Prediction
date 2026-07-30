@@ -2,7 +2,8 @@
 
 # Importing required libraries.
 import pandas as pd
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import train_test_split
 from joblib import dump
 import pickle
@@ -20,14 +21,18 @@ df = df.drop(columns='country')
 columns_to_drop = ['date', 'yr_renovated', 'street', 'city', 'statezip']
 df = df.drop(columns=columns_to_drop)
 
-# Creating a list of catogorical columns.
+# Creating a list of catogorical columns, numerical columns.
 categorical_columns = ['waterfront', 'view', 'condition']
+numeric_columns = ["bedrooms","bathrooms","sqft_living","sqft_lot",
+                "floors","sqft_above","sqft_basement","yr_built"]
 
-#Encoding the categorical columns using LabelEncoder and saving the encoders.
-for i in categorical_columns:
-    encoder = LabelEncoder()
-    df[i] = encoder.fit_transform(df[i])
-    dump(encoder, f"data/{i}_encoder.joblib")
+#Encoding the categorical columns using OneHotEncoder and saving the encoders.
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("num", StandardScaler(), numeric_columns),
+        ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_columns)
+    ]
+)
 
 # Splitting the data into Test and Train datasets.
 x = df.drop('price', axis=1)
@@ -35,12 +40,11 @@ y = df['price']
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=42)
 
 # Scaling the data using StandardScaler.
-scaler = StandardScaler()
-x_train = scaler.fit_transform(x_train)
-x_test = scaler.transform(x_test)
+x_train = preprocessor.fit_transform(x_train)
+x_test = preprocessor.transform(x_test)
 
-# Saving the preprocessed data to csv files for future use.
+# Saving the preprocessed data.
 df.to_csv('data/cleaned_house_price.csv', index=False)  # Saving the cleaned data to a csv file.
 with open("data/train_test_split.pkl", "wb") as f:
     pickle.dump((x_train, x_test, y_train, y_test), f)
-dump(scaler, "data/scaler.joblib")  # Saving the scaler object for future use in model deployment.
+dump(preprocessor, "data/preprocessor.joblib")  # Saving the preprocessor object for future use in model deployment.
